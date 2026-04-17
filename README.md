@@ -1,16 +1,52 @@
-# React + Vite
+# Stellar Ruse: Virtual Tabletop Prototype
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A premium, web-based virtual tabletop for a strategic card game, built with a focus on fluid animations, tactile card manipulation, and secret-keeping mechanics.
 
-Currently, two official plugins are available:
+## 🕹️ Core Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+### 1. Advanced Card Staging
+- **Multi-Card Selection**: Stage multiple cards from your hand simultaneously with a golden glow highlight.
+- **Double-Confirmation Flow**: Cards flip face-down in your hand before moving to the play area to ensure no "flashing" of hidden information.
 
-## React Compiler
+### 2. Multi-Stack Tabletop
+- **Independent Stacks**: Play cards in distinct groups (stacks) that can be moved independently across the tabletop.
+- **Dynamic Physics**: Drag stacks to reposition them. Stacks "cluster" together (80% overlap) when picked up for a tactile feel and fan out (50% overlap) when dropped.
+- **Out-of-Bounds Protection**: Stacks spring back to their original position if accidentally dropped outside the play area boundaries.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+### 3. Tactile Interactions (Mobile-Friendly)
+- **Tap-to-Peek**: Single-tap any face-down card you own to see a high-resolution, magnified preview in an overlay.
+- **Action Menu**: While peeking, access context buttons to Reveal/Hide the stack, return a specific card to your hand, or return the whole stack.
+- **Natural Return-to-Hand**: Physically drag a stack from the table down into your hand area to automatically return it to your deck.
 
-## Expanding the ESLint configuration
+### 4. Secret State Management
+- **Opponent Fog-of-War**: View the number of cards in opponents' hands. Any cards played by opponents to the table appear face-down and remain un-peekable to the player.
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+---
+
+## 🛠️ Tech Stack
+
+- **Game Engine**: [boardgame.io](https://boardgame.io/)  
+  *Manages the turn-based state machine, move validation, and game logic.*
+- **Frontend Framework**: [React](https://reactjs.org/) (via Vite)  
+  *Powers the component-based architecture and reactive UI.*
+- **Animation & Physics**: [Framer Motion](https://www.framer.com/motion/)  
+  *Handles complex layout transitions, drag interactions, and spring-based physics.*
+- **Styling**: [Vanilla CSS](https://developer.mozilla.org/en-US/docs/Web/CSS)  
+  *A custom, premium design system featuring glassmorphism, depth-based z-indexing, and an interstellar dark-mode aesthetic.*
+
+---
+
+## 🚀 Getting Started
+
+1.  **Install Dependencies**:
+    ```bash
+    npm install
+    ```
+2.  **Run Development Server**:
+    ```bash
+    npm run dev
+    ```
+3.  **Build for Production**:
+    ```bash
+    npm run build
+    ```
