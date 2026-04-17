@@ -29,7 +29,7 @@ export const CardGame = {
         const cardIndex = G.hands[player].findIndex(c => c.id === cardId);
         if (cardIndex !== -1) {
           const [card] = G.hands[player].splice(cardIndex, 1);
-          stackCards.push({ ...card, owner: player, isFaceDown: true });
+          stackCards.push({ ...card, owner: player, isFaceDown: true, isExhausted: false });
         }
       });
       if (stackCards.length > 0) {
@@ -74,13 +74,16 @@ export const CardGame = {
       }
     },
     exhaustCard: ({ G, ctx }, { stackId, cardId }) => {
-      const stack = G.playAreaStacks.find(s => s.id === stackId);
-      if (stack) {
-        const card = stack.cards.find(c => c.id === cardId);
-        if (card) {
-          card.isExhausted = !card.isExhausted;
-        }
-      }
+      G.playAreaStacks = G.playAreaStacks.map(stack => {
+        if (stack.id !== stackId) return stack;
+        return {
+          ...stack,
+          cards: stack.cards.map(card => {
+            if (card.id !== cardId) return card;
+            return { ...card, isExhausted: !card.isExhausted };
+          })
+        };
+      });
     },
     drawCard: ({ G, ctx }) => {
       // Mock draw functionality
