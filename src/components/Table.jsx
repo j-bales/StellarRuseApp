@@ -267,8 +267,6 @@ export function Table({ G, ctx, moves, events, playerID }) {
           gap: '1rem',
           alignItems: 'flex-end'
         }}>
-          </AnimatePresence>
-
           <div className="glass-panel" style={{ overflow: 'hidden', minWidth: '150px' }}>
             <div style={{ padding: '1rem', fontWeight: 'bold' }}>
               {ctx.currentPlayer === localPlayer ? '🟢 Your Turn' : '🔴 Opponent Turn'}
