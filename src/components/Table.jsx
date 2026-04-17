@@ -211,6 +211,40 @@ export function Table({ G, ctx, moves, events, playerID }) {
             )}
           </AnimatePresence>
 
+          {/* Staging Action Button - Hovers above hand */}
+          <AnimatePresence>
+            {stagedCardIds.length > 0 && (
+              <motion.div
+                initial={{ opacity: 0, y: 10, scale: 0.9 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: 10, scale: 0.9 }}
+                style={{
+                  position: 'absolute',
+                  top: '-70px',
+                  zIndex: 80,
+                }}
+              >
+                <button
+                  onClick={handleConfirm}
+                  className="glass-panel"
+                  style={{
+                    padding: '0.8rem 2rem',
+                    background: 'var(--color-primary)',
+                    color: 'white',
+                    border: 'none',
+                    cursor: 'pointer',
+                    fontWeight: 'bold',
+                    fontSize: '1.2rem',
+                    boxShadow: '0 0 30px rgba(59, 130, 246, 0.6)',
+                    letterSpacing: '1px'
+                  }}
+                >
+                  🚀 PLAY CARDS ({stagedCardIds.length})
+                </button>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
           {hand.map((card) => (
             <Card 
               key={card.id} 
@@ -233,28 +267,6 @@ export function Table({ G, ctx, moves, events, playerID }) {
           gap: '1rem',
           alignItems: 'flex-end'
         }}>
-          <AnimatePresence>
-            {stagedCardIds.length > 0 && (
-              <motion.button
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: 20 }}
-                onClick={handleConfirm}
-                className="glass-panel"
-                style={{
-                  padding: '1rem 2rem',
-                  background: 'var(--color-accent)',
-                  color: 'white',
-                  border: 'none',
-                  cursor: 'pointer',
-                  fontWeight: 'bold',
-                  fontSize: '1.1rem',
-                  boxShadow: '0 0 20px rgba(16, 185, 129, 0.4)'
-                }}
-              >
-                CONFIRM PLAY ({stagedCardIds.length})
-              </motion.button>
-            )}
           </AnimatePresence>
 
           <div className="glass-panel" style={{ overflow: 'hidden', minWidth: '150px' }}>
