@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-export function Card({ id, name, power, cost, isPlayable, isStaged, isFaceDown, isCompact, isPeeking, isStacked, isHighlyStacked, onClick, onPeekStart, onPeekEnd }) {
+export function Card({ id, name, power, cost, isPlayable, isStaged, isFaceDown, isCompact, isPeeking, isStacked, isHighlyStacked, isExhausted, onClick, onPeekStart, onPeekEnd }) {
   // Determine the rotation angle.
   const rotation = isFaceDown ? 180 : 0;
 
@@ -12,6 +12,7 @@ export function Card({ id, name, power, cost, isPlayable, isStaged, isFaceDown, 
       initial={false} // Prevent re-triggering entrance animations during layout moves
       animate={{
         rotateY: rotation,
+        rotateZ: isExhausted ? 90 : 0,
         scale: 1,
         opacity: 1
       }}
@@ -19,7 +20,8 @@ export function Card({ id, name, power, cost, isPlayable, isStaged, isFaceDown, 
         type: 'spring',
         stiffness: 260,
         damping: 25,
-        rotateY: { duration: 0.4 }
+        rotateY: { duration: 0.4 },
+        rotateZ: { type: 'spring', stiffness: 200, damping: 20 }
       }}
       whileHover={isPlayable && !isFaceDown ? { scale: 1.05, y: -10, zIndex: 10 } : {}}
       whileTap={isPlayable ? { scale: 0.95 } : {}}

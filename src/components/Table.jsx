@@ -45,7 +45,7 @@ export function Table({ G, ctx, moves, events, playerID }) {
 
   const startPeek = (card, stackId) => {
     if (card.owner === localPlayer) {
-      setPeekState({ card, stackId });
+      setPeekState({ cardId: card.id, stackId });
     }
   };
 
@@ -125,7 +125,7 @@ export function Table({ G, ctx, moves, events, playerID }) {
                 stack={stack}
                 moves={moves}
                 localPlayer={localPlayer}
-                peekedCard={peekState?.card}
+                peekedCard={peekState?.cardId}
                 onPeekStart={(card) => startPeek(card, stack.id)}
                 playAreaRef={playAreaRef}
                 handAreaRef={handAreaRef}
@@ -149,66 +149,80 @@ export function Table({ G, ctx, moves, events, playerID }) {
         }}>
           {/* Peeking Overlay - Shows the card faceup above the hand with actions */}
           <AnimatePresence>
-            {peekState && (
-              <div style={{
-                position: 'absolute',
-                top: '-180px',
-                zIndex: 100,
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                gap: '15px'
-              }}>
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.8, y: 20 }}
-                  animate={{ opacity: 1, scale: 1.1, y: 0 }}
-                  exit={{ opacity: 0, scale: 0.8, y: 20 }}
-                >
-                  <Card {...peekState.card} id={`${peekState.card.id}-peek`} isFaceDown={false} onClick={() => {}} />
-                </motion.div>
+            {(() => {
+              if (!peekState) return null;
+              const activeStack = G.playAreaStacks.find(s => s.id === peekState.stackId);
+              const activeCard = activeStack?.cards.find(c => c.id === peekState.cardId);
+              if (!activeCard) return null;
 
-                {/* Tactical Action Menu */}
-                <motion.div 
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  style={{ display: 'flex', gap: '10px' }}
-                >
-                  <button 
-                    className="glass-panel"
-                    onClick={(e) => { e.stopPropagation(); moves.flipStack(peekState.stackId); endPeek(); }}
-                    style={{ padding: '8px 16px', background: 'rgba(59, 130, 246, 0.5)', border: 'none', color: 'white', fontWeight: 'bold', cursor: 'pointer' }}
-                  >
-                    🔄 {peekState.card.isFaceDown ? 'Reveal Stack' : 'Hide Stack'}
-                  </button>
-                  <button 
-                    className="glass-panel"
-                    onClick={(e) => { e.stopPropagation(); moves.returnCardToHand({ stackId: peekState.stackId, cardId: peekState.card.id }); endPeek(); }}
-                    style={{ padding: '8px 16px', background: 'rgba(16, 185, 129, 0.5)', border: 'none', color: 'white', fontWeight: 'bold', cursor: 'pointer' }}
-                  >
-                    📥 Return Card
-                  </button>
-                  <button 
-                    className="glass-panel"
-                    onClick={(e) => { e.stopPropagation(); moves.returnStackToHand(peekState.stackId); endPeek(); }}
-                    style={{ padding: '8px 16px', background: 'rgba(239, 68, 68, 0.5)', border: 'none', color: 'white', fontWeight: 'bold', cursor: 'pointer' }}
-                  >
-                    🗃️ Return Stack
-                  </button>
-                </motion.div>
-
+              return (
                 <div style={{
-                  background: 'rgba(0,0,0,0.8)',
-                  padding: '4px 12px',
-                  borderRadius: '20px',
-                  fontSize: '0.8rem',
-                  color: '#FBBF24',
-                  fontWeight: 'bold',
-                  boxShadow: '0 0 10px rgba(251, 191, 36, 0.4)'
+                  position: 'absolute',
+                  top: '-180px',
+                  zIndex: 100,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  gap: '15px'
                 }}>
-                  PEEKING
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.8, y: 20 }}
+                    animate={{ opacity: 1, scale: 1.1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.8, y: 20 }}
+                  >
+                    <Card {...activeCard} id={`${activeCard.id}-peek`} isFaceDown={false} onClick={() => {}} />
+                  </motion.div>
+
+                  {/* Tactical Action Menu */}
+                  <motion.div 
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    style={{ display: 'flex', gap: '10px' }}
+                  >
+                    <button 
+                      className="glass-panel"
+                      onClick={(e) => { e.stopPropagation(); moves.flipStack(peekState.stackId); endPeek(); }}
+                      style={{ padding: '8px 16px', background: 'rgba(59, 130, 246, 0.5)', border: 'none', color: 'white', fontWeight: 'bold', cursor: 'pointer' }}
+                    >
+                      🔄 {activeCard.isFaceDown ? 'Reveal Stack' : 'Hide Stack'}
+                    </button>
+                    <button 
+                      className="glass-panel"
+                      onClick={(e) => { e.stopPropagation(); moves.exhaustCard({ stackId: peekState.stackId, cardId: peekState.cardId }); }}
+                      style={{ padding: '8px 16px', background: activeCard.isExhausted ? 'rgba(251, 191, 36, 0.5)' : 'rgba(107, 114, 128, 0.5)', border: 'none', color: 'white', fontWeight: 'bold', cursor: 'pointer' }}
+                    >
+                      ⚡ {activeCard.isExhausted ? 'Ready Card' : 'Exhaust Card'}
+                    </button>
+                    <button 
+                      className="glass-panel"
+                      onClick={(e) => { e.stopPropagation(); moves.returnCardToHand({ stackId: peekState.stackId, cardId: peekState.cardId }); endPeek(); }}
+                      style={{ padding: '8px 16px', background: 'rgba(16, 185, 129, 0.5)', border: 'none', color: 'white', fontWeight: 'bold', cursor: 'pointer' }}
+                    >
+                      📥 Return Card
+                    </button>
+                    <button 
+                      className="glass-panel"
+                      onClick={(e) => { e.stopPropagation(); moves.returnStackToHand(peekState.stackId); endPeek(); }}
+                      style={{ padding: '8px 16px', background: 'rgba(239, 68, 68, 0.5)', border: 'none', color: 'white', fontWeight: 'bold', cursor: 'pointer' }}
+                    >
+                      🗃️ Return Stack
+                    </button>
+                  </motion.div>
+
+                  <div style={{
+                    background: 'rgba(0,0,0,0.8)',
+                    padding: '4px 12px',
+                    borderRadius: '20px',
+                    fontSize: '0.8rem',
+                    color: '#FBBF24',
+                    fontWeight: 'bold',
+                    boxShadow: '0 0 10px rgba(251, 191, 36, 0.4)'
+                  }}>
+                    PEEKING
+                  </div>
                 </div>
-              </div>
-            )}
+              );
+            })()}
           </AnimatePresence>
 
           {/* Staging Action Button - Hovers above hand */}

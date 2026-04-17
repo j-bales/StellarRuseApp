@@ -44,7 +44,7 @@ export const CardGame = {
       if (stackIndex !== -1) {
         const stack = G.playAreaStacks[stackIndex];
         stack.cards.forEach(card => {
-           G.hands[card.owner].push({ ...card, isFaceDown: false });
+           G.hands[card.owner].push({ ...card, isFaceDown: false, isExhausted: false });
         });
         G.playAreaStacks.splice(stackIndex, 1);
       }
@@ -56,7 +56,7 @@ export const CardGame = {
         const cardIndex = stack.cards.findIndex(c => c.id === cardId);
         if (cardIndex !== -1) {
           const [card] = stack.cards.splice(cardIndex, 1);
-          G.hands[card.owner].push({ ...card, isFaceDown: false });
+          G.hands[card.owner].push({ ...card, isFaceDown: false, isExhausted: false });
           if (stack.cards.length === 0) {
             G.playAreaStacks.splice(stackIndex, 1);
           }
@@ -71,6 +71,15 @@ export const CardGame = {
         stack.cards.forEach(card => {
            card.isFaceDown = !isCurrentlyFaceDown;
         });
+      }
+    },
+    exhaustCard: ({ G, ctx }, { stackId, cardId }) => {
+      const stack = G.playAreaStacks.find(s => s.id === stackId);
+      if (stack) {
+        const card = stack.cards.find(c => c.id === cardId);
+        if (card) {
+          card.isExhausted = !card.isExhausted;
+        }
       }
     },
     drawCard: ({ G, ctx }) => {
