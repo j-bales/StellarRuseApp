@@ -7,8 +7,6 @@ export function Card({ id, name, power, cost, isPlayable, isStaged, isFaceDown, 
 
   return (
     <motion.div
-      layout
-      layoutId={id}
       initial={false} // Prevent re-triggering entrance animations during layout moves
       animate={{
         rotateY: rotation,

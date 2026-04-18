@@ -64,14 +64,17 @@ export const CardGame = {
       }
     },
     flipStack: ({ G, ctx }, stackId) => {
-      const stack = G.playAreaStacks.find(s => s.id === stackId);
-      if (stack && stack.cards.length > 0) {
-        // Toggle the face down state based on the first card
-        const isCurrentlyFaceDown = stack.cards[0].isFaceDown;
-        stack.cards.forEach(card => {
-           card.isFaceDown = !isCurrentlyFaceDown;
-        });
-      }
+      G.playAreaStacks = G.playAreaStacks.map(stack => {
+        if (stack.id !== stackId) return stack;
+        const isCurrentlyFaceDown = stack.cards[0]?.isFaceDown;
+        return {
+          ...stack,
+          cards: stack.cards.map(card => ({
+            ...card,
+            isFaceDown: !isCurrentlyFaceDown
+          }))
+        };
+      });
     },
     exhaustCard: ({ G, ctx }, { stackId, cardId }) => {
       G.playAreaStacks = G.playAreaStacks.map(stack => {
