@@ -22,3 +22,9 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Card catalog — IP-sensitive, never commit
+cards/catalog.json
+cards/art/
+# Template is committed once as reference then ignored here too
+cards/catalog.template.json
