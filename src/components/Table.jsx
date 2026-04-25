@@ -2,11 +2,13 @@ import React, { useState, useRef } from 'react';
 import { Card } from './Card';
 import { PlayStack } from './PlayStack';
 import { motion, AnimatePresence, LayoutGroup } from 'framer-motion';
+import { cardMatchesFilter } from '../game/AbilityRegistry';
 
 export function Table({ G, ctx, moves, events, playerID }) {
   const [stagedCardIds, setStagedCardIds] = useState([]);
   const [isFlipping, setIsFlipping] = useState(false);
   const [peekState, setPeekState] = useState(null); // { card, stackId }
+  const [targetingState, setTargetingState] = useState(null); // { sourceCardId, sourceStackId, ability, abilityIndex }
   const playAreaRef = useRef(null);
   const handAreaRef = useRef(null);
 
@@ -17,7 +19,7 @@ export function Table({ G, ctx, moves, events, playerID }) {
   const playAreaStacks = G.playAreaStacks || [];
 
   const handleCardClick = (cardId) => {
-    if (ctx.currentPlayer !== localPlayer || isFlipping) return;
+    if (ctx.currentPlayer !== localPlayer || isFlipping || targetingState) return;
 
     setStagedCardIds(prev => 
       prev.includes(cardId) 
@@ -44,13 +46,56 @@ export function Table({ G, ctx, moves, events, playerID }) {
   };
 
   const startPeek = (card, stackId) => {
-    if (card.owner === localPlayer) {
+    if (card.owner === localPlayer && !targetingState) {
       setPeekState({ cardId: card.instanceId ?? card.id, stackId });
     }
   };
 
   const endPeek = () => {
     setPeekState(null);
+  };
+
+  const handleExhaustClick = (activeCard, stackId) => {
+    // If the card has no abilities, just toggle exhaustion as normal
+    if (!activeCard.abilities || activeCard.abilities.length === 0) {
+      moves.exhaustCard({ stackId, cardId: activeCard.instanceId ?? activeCard.id });
+      return;
+    }
+
+    // Currently only supporting the first ability for simplification
+    const abilityIndex = 0;
+    const ability = activeCard.abilities[abilityIndex];
+
+    if (ability.requiresTarget) {
+      setTargetingState({
+        sourceCardId: activeCard.instanceId ?? activeCard.id,
+        sourceStackId: stackId,
+        ability,
+        abilityIndex
+      });
+      setPeekState(null);
+    } else {
+      // Direct activation (no target needed)
+      moves.activateAbility({
+        sourceStackId: stackId,
+        sourceCardId: activeCard.instanceId ?? activeCard.id,
+        abilityIndex
+      });
+      setPeekState(null);
+    }
+  };
+
+  const handleTargetSelection = (targetCard) => {
+    if (!targetingState) return;
+    
+    moves.activateAbility({
+      sourceStackId: targetingState.sourceStackId,
+      sourceCardId: targetingState.sourceCardId,
+      targetCardId: targetCard.instanceId ?? targetCard.id,
+      abilityIndex: targetingState.abilityIndex
+    });
+    
+    setTargetingState(null);
   };
 
   return (
@@ -79,9 +124,9 @@ export function Table({ G, ctx, moves, events, playerID }) {
             overflow: 'hidden'
           }}>
              <h4 style={{ margin: '0 0 10px 0', color: 'var(--color-text-muted)' }}>Opponent 1</h4>
-             <div style={{ display: 'flex', gap: '-40px', transform: 'scale(0.6)', transformOrigin: 'top center' }}>
+             <div style={{ display: 'flex', gap: '-20px', transform: 'scale(0.7)', transformOrigin: 'top center' }}>
                 {(G.hands['1'] || []).map(card => (
-                  <Card key={card.id} {...card} isFaceDown={true} isPlayable={false} />
+                  <Card key={card.instanceId ?? card.id} {...card} id={card.instanceId ?? card.id} isFaceDown={true} isPlayable={false} />
                 ))}
              </div>
           </div>
@@ -94,9 +139,9 @@ export function Table({ G, ctx, moves, events, playerID }) {
             overflow: 'hidden'
           }}>
              <h4 style={{ margin: '0 0 10px 0', color: 'var(--color-text-muted)' }}>Opponent 2</h4>
-             <div style={{ display: 'flex', gap: '-40px', transform: 'scale(0.6)', transformOrigin: 'top center' }}>
+             <div style={{ display: 'flex', gap: '-20px', transform: 'scale(0.7)', transformOrigin: 'top center' }}>
                 {(G.hands['2'] || []).map(card => (
-                  <Card key={card.id} {...card} isFaceDown={true} isPlayable={false} />
+                  <Card key={card.instanceId ?? card.id} {...card} id={card.instanceId ?? card.id} isFaceDown={true} isPlayable={false} />
                 ))}
              </div>
           </div>
@@ -129,6 +174,9 @@ export function Table({ G, ctx, moves, events, playerID }) {
                 onPeekStart={(card) => startPeek(card, stack.id)}
                 playAreaRef={playAreaRef}
                 handAreaRef={handAreaRef}
+                targetingAbility={targetingState?.ability}
+                onTargetSelect={handleTargetSelection}
+                currentPlayer={localPlayer}
               />
             ))
           )}
@@ -194,10 +242,10 @@ export function Table({ G, ctx, moves, events, playerID }) {
                     </button>
                     <button 
                       className="glass-panel"
-                      onClick={(e) => { e.stopPropagation(); moves.exhaustCard({ stackId: peekState.stackId, cardId: peekState.cardId }); }}
+                      onClick={(e) => { e.stopPropagation(); handleExhaustClick(activeCard, peekState.stackId); }}
                       style={{ padding: '8px 16px', background: activeCard.isExhausted ? 'rgba(251, 191, 36, 0.5)' : 'rgba(107, 114, 128, 0.5)', border: 'none', color: 'white', fontWeight: 'bold', cursor: 'pointer' }}
                     >
-                      ⚡ {activeCard.isExhausted ? 'Ready Card' : 'Exhaust Card'}
+                      ⚡ {activeCard.isExhausted ? 'Ready Card' : (activeCard.abilities?.length > 0 ? 'Activate Ability' : 'Exhaust Card')}
                     </button>
                     <button 
                       className="glass-panel"
@@ -312,7 +360,36 @@ export function Table({ G, ctx, moves, events, playerID }) {
               </button>
             )}
           </div>
+          {targetingState && (
+            <button 
+              className="glass-panel"
+              onClick={() => setTargetingState(null)}
+              style={{ padding: '1rem', background: 'rgba(239, 68, 68, 0.5)', color: 'white', border: 'none', fontWeight: 'bold', cursor: 'pointer' }}
+            >
+              ❌ Cancel Targeting
+            </button>
+          )}
         </div>
+
+        {/* Global Targeting UI State Info */}
+        {targetingState && (
+          <div style={{
+            position: 'fixed',
+            top: '20px',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            background: 'var(--color-primary)',
+            padding: '10px 30px',
+            borderRadius: '100px',
+            color: 'white',
+            fontWeight: 'bold',
+            boxShadow: '0 0 40px rgba(59, 130, 246, 0.8)',
+            zIndex: 1000,
+            pointerEvents: 'none'
+          }}>
+            🎯 SELECT A TARGET: {targetingState.ability.description}
+          </div>
+        )}
 
       </div>
     </LayoutGroup>

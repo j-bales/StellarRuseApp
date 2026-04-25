@@ -1,3 +1,5 @@
+import { executeAbility } from './AbilityRegistry';
+
 export const CardGame = {
   name: 'stellar-ruse',
   
@@ -10,12 +12,14 @@ export const CardGame = {
     let deck = [];
     const targetDeckSize = 30;
     
+    const getUniqueId = (prefix, i) => `${prefix}-${i}-${Math.random().toString(36).substr(2, 9)}`;
+
     if (catalog.length > 0) {
       for (let i = 0; i < targetDeckSize; i++) {
         const baseCard = catalog[i % catalog.length];
         deck.push({
           ...baseCard,
-          instanceId: `inst-${i}-${Math.random().toString(36).substr(2, 5)}`
+          instanceId: getUniqueId('inst', i)
         });
       }
       // Shuffle the deck
@@ -24,7 +28,7 @@ export const CardGame = {
       // Fallback mock cards if catalog failed to load
       deck = Array.from({ length: 20 }, (_, i) => ({
         id: `mock-${i}`,
-        instanceId: `inst-mock-${i}`,
+        instanceId: getUniqueId('mock', i),
         name: `Entity ${i + 1}`,
         attack: Math.floor(Math.random() * 8) + 1,
         cost: { S: 1, E: 1, I: 1 },
@@ -114,6 +118,32 @@ export const CardGame = {
         };
       });
     },
+
+    activateAbility: ({ G, ctx }, { sourceStackId, sourceCardId, targetCardId, abilityIndex }) => {
+      const sourceStack = G.playAreaStacks.find(s => s.id === sourceStackId);
+      if (!sourceStack) return;
+
+      const sourceCard = sourceStack.cards.find(c => (c.instanceId ?? c.id) === sourceCardId);
+      if (!sourceCard || sourceCard.isExhausted) return;
+
+      const ability = sourceCard.abilities[abilityIndex];
+      if (!ability) return;
+
+      let targetCard = null;
+      if (targetCardId) {
+        for (const stack of G.playAreaStacks) {
+          targetCard = stack.cards.find(c => (c.instanceId ?? c.id) === targetCardId);
+          if (targetCard) break;
+        }
+      }
+
+      // Execute the ability effect
+      executeAbility(ability.key, G, ctx, sourceCard, targetCard, ability.params);
+
+      // Exhaust the card as part of activation
+      sourceCard.isExhausted = true;
+    },
+
     drawCard: ({ G, ctx }) => {
       // Mock draw functionality
     }

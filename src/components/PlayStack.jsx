@@ -1,8 +1,9 @@
 import React, { useState, useRef } from 'react';
 import { motion, useAnimation } from 'framer-motion';
 import { Card } from './Card';
+import { cardMatchesFilter } from '../game/AbilityRegistry';
 
-export function PlayStack({ stack, moves, localPlayer, peekedCard, onPeekStart, playAreaRef, handAreaRef }) {
+export function PlayStack({ stack, moves, localPlayer, peekedCard, onPeekStart, playAreaRef, handAreaRef, targetingAbility, onTargetSelect, currentPlayer }) {
   const [isDraggingStack, setIsDraggingStack] = useState(false);
   const [dragPos, setDragPos] = useState({ x: 0, y: 0 });
   const controls = useAnimation();
@@ -67,7 +68,8 @@ export function PlayStack({ stack, moves, localPlayer, peekedCard, onPeekStart, 
     <motion.div 
       drag 
       dragMomentum={false}
-      animate={controls}
+      initial={{ x: dragPos.x, y: dragPos.y, scale: isOpponentStack ? 0.85 : 1 }}
+      animate={{ ...controls, scale: isOpponentStack ? 0.85 : 1 }}
       onDragStart={() => {
         setIsDraggingStack(true);
         dragLockRef.current = true;
@@ -80,24 +82,30 @@ export function PlayStack({ stack, moves, localPlayer, peekedCard, onPeekStart, 
         padding: '0 2rem', 
         cursor: isDraggingStack ? 'grabbing' : 'grab',
         zIndex: isDraggingStack ? 50 : 1,
-        position: 'absolute',
-        transform: isOpponentStack ? 'scale(0.85)' : 'none',
+        position: 'relative',
         opacity: isOpponentStack ? 0.8 : 1
       }}
     >
-      {stack.cards.map((card, index) => (
-        <Card 
-          key={card.instanceId ?? card.id} 
-          {...card} 
-          isExhausted={card.isExhausted}
-          isPlayable={false} 
-          isCompact={true} 
-          isStacked={index > 0}
-          isHighlyStacked={isDraggingStack && index > 0}
-          isPeeking={peekedCard === (card.instanceId ?? card.id)}
-          onPeekStart={() => !dragLockRef.current && !isOpponentStack && onPeekStart(card, stack.id)}
-        />
-      ))}
+      {stack.cards.map((card, index) => {
+        const isTargetable = targetingAbility ? cardMatchesFilter(card, targetingAbility.targetFilter, currentPlayer) : false;
+        
+        return (
+          <Card 
+            key={card.instanceId ?? card.id} 
+            {...card} 
+            isExhausted={card.isExhausted}
+            isPlayable={false} 
+            isCompact={true} 
+            isStacked={index > 0}
+            isHighlyStacked={isDraggingStack && index > 0}
+            isPeeking={peekedCard === (card.instanceId ?? card.id)}
+            isTargetable={isTargetable}
+            isInvalidTarget={!!targetingAbility && !isTargetable}
+            onPeekStart={() => !dragLockRef.current && !isOpponentStack && onPeekStart(card, stack.id)}
+            onClick={isTargetable ? () => onTargetSelect(card) : null}
+          />
+        );
+      })}
     </motion.div>
   );
 }

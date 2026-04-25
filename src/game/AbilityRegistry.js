@@ -21,7 +21,7 @@
 
 function findCardInStacks(G, cardId) {
   for (const stack of G.playAreaStacks) {
-    const card = stack.cards.find(c => c.id === cardId);
+    const card = stack.cards.find(c => (c.instanceId ?? c.id) === cardId);
     if (card) return { stack, card };
   }
   return null;
@@ -38,7 +38,8 @@ function findCardInStacks(G, cardId) {
  */
 function reduce_attack(G, ctx, sourceCard, targetCard, params) {
   if (!targetCard) return;
-  const found = findCardInStacks(G, targetCard.id);
+  const targetId = targetCard.instanceId ?? targetCard.id;
+  const found = findCardInStacks(G, targetId);
   if (!found) return;
   found.card.attack = Math.max(0, (found.card.attack ?? 0) - (params.amount ?? 1));
 }
@@ -49,9 +50,10 @@ function reduce_attack(G, ctx, sourceCard, targetCard, params) {
  */
 function return_opponent_card(G, ctx, sourceCard, targetCard, params) {
   if (!targetCard) return;
+  const targetId = targetCard.instanceId ?? targetCard.id;
   for (let i = 0; i < G.playAreaStacks.length; i++) {
     const stack = G.playAreaStacks[i];
-    const cardIndex = stack.cards.findIndex(c => c.id === targetCard.id);
+    const cardIndex = stack.cards.findIndex(c => (c.instanceId ?? c.id) === targetId);
     if (cardIndex !== -1) {
       const [card] = stack.cards.splice(cardIndex, 1);
       G.hands[card.owner].push({ ...card, isFaceDown: false, isExhausted: false });
@@ -70,10 +72,11 @@ function return_opponent_card(G, ctx, sourceCard, targetCard, params) {
  */
 function steal_to_hand(G, ctx, sourceCard, targetCard, params) {
   if (!targetCard) return;
+  const targetId = targetCard.instanceId ?? targetCard.id;
   const currentPlayer = ctx.currentPlayer;
   for (let i = 0; i < G.playAreaStacks.length; i++) {
     const stack = G.playAreaStacks[i];
-    const cardIndex = stack.cards.findIndex(c => c.id === targetCard.id);
+    const cardIndex = stack.cards.findIndex(c => (c.instanceId ?? c.id) === targetId);
     if (cardIndex !== -1) {
       const [card] = stack.cards.splice(cardIndex, 1);
       // Transfer ownership to current player
@@ -97,9 +100,10 @@ function steal_to_hand(G, ctx, sourceCard, targetCard, params) {
  * No target needed.
  */
 function return_self_to_hand(G, ctx, sourceCard, targetCard, params) {
+  const sourceId = sourceCard.instanceId ?? sourceCard.id;
   for (let i = 0; i < G.playAreaStacks.length; i++) {
     const stack = G.playAreaStacks[i];
-    const cardIndex = stack.cards.findIndex(c => c.id === sourceCard.id);
+    const cardIndex = stack.cards.findIndex(c => (c.instanceId ?? c.id) === sourceId);
     if (cardIndex !== -1) {
       const [card] = stack.cards.splice(cardIndex, 1);
       G.hands[card.owner].push({ ...card, isFaceDown: false, isExhausted: false });

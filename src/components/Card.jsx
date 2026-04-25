@@ -3,12 +3,11 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 export function Card({ 
   id, name, attack, cost, abilities, flavor, art,
-  isPlayable, isStaged, isFaceDown, isCompact, isPeeking, isStacked, isHighlyStacked, isExhausted, onClick, onPeekStart 
+  isPlayable, isStaged, isFaceDown, isCompact, isPeeking, isStacked, isHighlyStacked, isExhausted, 
+  isTargetable, isInvalidTarget, onClick, onPeekStart 
 }) {
-  // Determine the rotation angle.
   const rotation = isFaceDown ? 180 : 0;
 
-  // Helper to render cost pips
   const renderCost = () => {
     if (!cost || typeof cost !== 'object') return null;
     const resources = [
@@ -49,20 +48,20 @@ export function Card({
       animate={{
         rotateY: rotation,
         rotateZ: isExhausted ? 90 : 0,
-        scale: 1,
-        opacity: 1
+        scale: isTargetable ? 1.05 : 1,
+        opacity: isInvalidTarget ? 0.5 : 1,
       }}
       transition={{
         type: 'spring',
         stiffness: 260,
         damping: 25,
-        rotateY: { duration: 0.4 },
-        rotateZ: { type: 'spring', stiffness: 200, damping: 20 }
       }}
       whileHover={isPlayable && !isFaceDown ? { scale: 1.05, y: -10, zIndex: 10 } : {}}
-      whileTap={isPlayable ? { scale: 0.95 } : {}}
       onClick={(e) => {
-        if (isPlayable && onClick) {
+        if (isTargetable && onClick) {
+          e.stopPropagation();
+          onClick(id);
+        } else if (isPlayable && onClick) {
           onClick(id);
         } else if (onPeekStart) {
           e.stopPropagation();
@@ -74,124 +73,46 @@ export function Card({
         height: isCompact ? '142px' : '210px',
         margin: isHighlyStacked ? '0 0 0 -80px' : (isStacked ? '0 0 0 -50px' : (isCompact ? '0' : '0 -15px')),
         position: 'relative',
-        cursor: (isPlayable || onPeekStart) ? 'pointer' : 'default',
+        cursor: (isPlayable || onPeekStart || isTargetable) ? 'pointer' : 'default',
         borderRadius: '12px',
-        perspective: '1000px',
         transformStyle: 'preserve-3d',
-        zIndex: (isStaged || isPeeking) ? 20 : 1
+        zIndex: (isStaged || isPeeking || isTargetable) ? 50 : 1,
+        background: '#1A202C', // Solid fallback background
       }}
     >
-      <AnimatePresence>
-        {isStaged && (
-          <motion.div
-            initial={{ opacity: 0, scale: 1.05 }}
-            animate={{ opacity: 1, scale: 1.1 }}
-            exit={{ opacity: 0, scale: 1.05 }}
-            style={{
-              position: 'absolute',
-              inset: '-4px',
-              borderRadius: '16px',
-              border: '3px solid var(--color-primary)',
-              boxShadow: '0 0 15px var(--color-primary-glow)',
-              pointerEvents: 'none',
-              zIndex: -1
-            }}
-          />
-        )}
-      </AnimatePresence>
-
       {/* Front Face */}
       <div
         style={{
           position: 'absolute',
           inset: 0,
           backfaceVisibility: 'hidden',
-          background: 'linear-gradient(135deg, var(--color-card-bg) 0%, #111827 100%)',
-          border: '1px solid var(--color-card-border)',
+          background: 'linear-gradient(135deg, #2D3748 0%, #1A202C 100%)',
+          border: '1px solid #4A5568',
           borderRadius: '12px',
           padding: '10px',
           display: 'flex',
           flexDirection: 'column',
           justifyContent: 'space-between',
-          color: 'var(--color-text-main)',
+          color: '#E2E8F0',
           boxShadow: '0 8px 16px rgba(0,0,0,0.5)',
           fontSize: isCompact ? '0.75rem' : '1rem',
-          pointerEvents: isFaceDown ? 'none' : 'auto',
           opacity: isFaceDown ? 0 : 1, 
-          transition: 'opacity 0.1s'
+          pointerEvents: isFaceDown ? 'none' : 'auto',
+          zIndex: isFaceDown ? 0 : 2
         }}
       >
-        {/* Header: Cost & Attack Stats */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
           {renderCost()}
-          <div style={{ 
-            background: 'rgba(239, 68, 68, 0.2)',
-            color: '#F87171',
-            padding: '2px 6px',
-            borderRadius: '4px',
-            fontWeight: 'bold',
-            fontSize: '0.85em',
-            border: '1px solid #F8717144'
-          }}>
+          <div style={{ background: 'rgba(239, 68, 68, 0.2)', color: '#F87171', padding: '2px 6px', borderRadius: '4px', fontWeight: 'bold' }}>
             {attack}A
           </div>
         </div>
 
-        {/* Art Placeholder */}
-        <div style={{
-          flex: '0 0 60px',
-          background: 'rgba(255,255,255,0.05)',
-          borderRadius: '6px',
-          margin: '4px 0',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          border: '1px solid rgba(255,255,255,0.1)'
-        }}>
-           <span style={{ opacity: 0.2, fontSize: '1.2rem' }}>🖼️</span>
-        </div>
+        <div style={{ flex: 1, textAlign: 'center', fontWeight: 'bold', color: '#F7FAFC' }}>{name}</div>
 
-        {/* Title */}
-        <div style={{ 
-          textAlign: 'center', 
-          fontWeight: 'bold', 
-          fontSize: isCompact ? '0.85em' : '1em',
-          textShadow: '0 2px 4px rgba(0,0,0,0.5)',
-          color: '#E2E8F0'
-        }}>
-          {name}
-        </div>
-
-        {/* Abilities Section */}
         {!isCompact && abilities && abilities.length > 0 && (
-          <div style={{
-            fontSize: '0.65rem',
-            background: 'rgba(0,0,0,0.4)',
-            padding: '6px',
-            borderRadius: '6px',
-            margin: '4px 0',
-            border: '1px solid rgba(255,255,255,0.1)',
-            minHeight: '40px'
-          }}>
-            {abilities.map((ability, i) => (
-              <div key={i} style={{ lineClamp: 2, overflow: 'hidden' }}>
-                <span style={{ color: 'var(--color-primary)', fontWeight: 'bold' }}>⚡ </span>
-                {ability.description}
-              </div>
-            ))}
-          </div>
-        )}
-
-        {/* Flavor Text */}
-        {!isCompact && flavor && (
-          <div style={{ 
-            fontSize: '0.6rem', 
-            color: 'var(--color-text-muted)', 
-            textAlign: 'center', 
-            fontStyle: 'italic',
-            opacity: 0.7 
-          }}>
-            "{flavor}"
+          <div style={{ fontSize: '0.65rem', background: 'rgba(0,0,0,0.3)', padding: '4px', borderRadius: '4px', margin: '4px 0' }}>
+            {abilities[0].description}
           </div>
         )}
       </div>
@@ -203,30 +124,19 @@ export function Card({
           inset: 0,
           backfaceVisibility: 'hidden',
           transform: 'rotateY(180deg)',
-          background: 'linear-gradient(135deg, #1E1B4B 0%, #0F172A 100%)',
-          border: '2px solid rgba(59, 130, 246, 0.2)',
+          background: 'linear-gradient(135deg, #1A365D 0%, #171923 100%)',
+          border: '2px solid #2B6CB0',
           borderRadius: '12px',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
           boxShadow: '0 8px 16px rgba(0,0,0,0.5)',
+          opacity: isFaceDown ? 1 : 0,
           pointerEvents: isFaceDown ? 'auto' : 'none',
-          opacity: isFaceDown ? 1 : 0, 
-          transition: 'opacity 0.1s'
+          zIndex: isFaceDown ? 2 : 0
         }}
       >
-        <div style={{
-          width: '75%',
-          height: '75%',
-          border: '1px solid rgba(59, 130, 246, 0.1)',
-          borderRadius: '8px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          background: 'radial-gradient(circle, rgba(59, 130, 246, 0.05) 0%, transparent 70%)'
-        }}>
-          <span style={{ fontSize: isCompact ? '1.5rem' : '2rem', opacity: 0.4 }}>🌟</span>
-        </div>
+        <div style={{ fontSize: isCompact ? '1.5rem' : '2.5rem' }}>🌟</div>
       </div>
     </motion.div>
   );
