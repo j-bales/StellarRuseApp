@@ -87,14 +87,14 @@ export function PlayStack({ stack, moves, localPlayer, peekedCard, onPeekStart, 
     >
       {stack.cards.map((card, index) => (
         <Card 
-          key={card.id} 
+          key={card.instanceId ?? card.id} 
           {...card} 
           isExhausted={card.isExhausted}
           isPlayable={false} 
           isCompact={true} 
           isStacked={index > 0}
           isHighlyStacked={isDraggingStack && index > 0}
-          isPeeking={peekedCard === card.id}
+          isPeeking={peekedCard === (card.instanceId ?? card.id)}
           onPeekStart={() => !dragLockRef.current && !isOpponentStack && onPeekStart(card, stack.id)}
         />
       ))}

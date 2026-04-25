@@ -1,23 +1,49 @@
 export const CardGame = {
   name: 'stellar-ruse',
   
-  setup: ({ ctx }) => {
-    // Generate some mock cards
-    const deck = Array.from({ length: 20 }, (_, i) => ({
-      id: `card-${i}`,
-      name: `Entity ${i + 1}`,
-      power: Math.floor(Math.random() * 8) + 1,
-      cost: Math.floor(Math.random() * 5) + 1,
-    }));
+  setup: function({ ctx, setupData }) {
+    // catalog is injected via setupData or via global fallback
+    const catalog = setupData || window.CARD_CATALOG || [];
+    
+    // Create a deck by duplicating cards from the catalog to reach a reasonable size
+    // Each card gets a unique instanceId to distinguish multiple copies
+    let deck = [];
+    const targetDeckSize = 30;
+    
+    if (catalog.length > 0) {
+      for (let i = 0; i < targetDeckSize; i++) {
+        const baseCard = catalog[i % catalog.length];
+        deck.push({
+          ...baseCard,
+          instanceId: `inst-${i}-${Math.random().toString(36).substr(2, 5)}`
+        });
+      }
+      // Shuffle the deck
+      deck = deck.sort(() => Math.random() - 0.5);
+    } else {
+      // Fallback mock cards if catalog failed to load
+      deck = Array.from({ length: 20 }, (_, i) => ({
+        id: `mock-${i}`,
+        instanceId: `inst-mock-${i}`,
+        name: `Entity ${i + 1}`,
+        attack: Math.floor(Math.random() * 8) + 1,
+        cost: { S: 1, E: 1, I: 1 },
+        abilities: []
+      }));
+    }
+
+    const hands = {};
+    for (let p = 0; p < ctx.numPlayers; p++) {
+      hands[p.toString()] = deck.splice(0, 5).map(card => ({
+        ...card,
+        owner: p.toString()
+      }));
+    }
 
     return {
       deck: deck,
-      hands: {
-        '0': deck.slice(0, 5),   // Player 0 hand
-        '1': deck.slice(5, 10),  // Player 1 (Enemy 1)
-        '2': deck.slice(10, 15)  // Player 2 (Enemy 2)
-      },
-      playAreaStacks: [], // Array of individual stacks, each containing played cards
+      hands: hands,
+      playAreaStacks: [], 
     };
   },
 
@@ -26,7 +52,7 @@ export const CardGame = {
       const player = ctx.currentPlayer;
       const stackCards = [];
       cardIds.forEach(cardId => {
-        const cardIndex = G.hands[player].findIndex(c => c.id === cardId);
+        const cardIndex = G.hands[player].findIndex(c => (c.instanceId ?? c.id) === cardId);
         if (cardIndex !== -1) {
           const [card] = G.hands[player].splice(cardIndex, 1);
           stackCards.push({ ...card, owner: player, isFaceDown: true, isExhausted: false });
@@ -53,7 +79,7 @@ export const CardGame = {
       const stackIndex = G.playAreaStacks.findIndex(s => s.id === stackId);
       if (stackIndex !== -1) {
         const stack = G.playAreaStacks[stackIndex];
-        const cardIndex = stack.cards.findIndex(c => c.id === cardId);
+        const cardIndex = stack.cards.findIndex(c => (c.instanceId ?? c.id) === cardId);
         if (cardIndex !== -1) {
           const [card] = stack.cards.splice(cardIndex, 1);
           G.hands[card.owner].push({ ...card, isFaceDown: false, isExhausted: false });
@@ -82,7 +108,7 @@ export const CardGame = {
         return {
           ...stack,
           cards: stack.cards.map(card => {
-            if (card.id !== cardId) return card;
+            if ((card.instanceId ?? card.id) !== cardId) return card;
             return { ...card, isExhausted: !card.isExhausted };
           })
         };

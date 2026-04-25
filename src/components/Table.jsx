@@ -16,13 +16,13 @@ export function Table({ G, ctx, moves, events, playerID }) {
   const hand = G.hands[localPlayer] || [];
   const playAreaStacks = G.playAreaStacks || [];
 
-  const handleCardClick = (id) => {
+  const handleCardClick = (cardId) => {
     if (ctx.currentPlayer !== localPlayer || isFlipping) return;
 
     setStagedCardIds(prev => 
-      prev.includes(id) 
-        ? prev.filter(cardId => cardId !== id) 
-        : [...prev, id]
+      prev.includes(cardId) 
+        ? prev.filter(id => id !== cardId) 
+        : [...prev, cardId]
     );
   };
 
@@ -45,7 +45,7 @@ export function Table({ G, ctx, moves, events, playerID }) {
 
   const startPeek = (card, stackId) => {
     if (card.owner === localPlayer) {
-      setPeekState({ cardId: card.id, stackId });
+      setPeekState({ cardId: card.instanceId ?? card.id, stackId });
     }
   };
 
@@ -152,7 +152,7 @@ export function Table({ G, ctx, moves, events, playerID }) {
             {(() => {
               if (!peekState) return null;
               const activeStack = G.playAreaStacks.find(s => s.id === peekState.stackId);
-              const activeCard = activeStack?.cards.find(c => c.id === peekState.cardId);
+              const activeCard = activeStack?.cards.find(c => (c.instanceId ?? c.id) === peekState.cardId);
               if (!activeCard) return null;
 
               return (
@@ -170,7 +170,13 @@ export function Table({ G, ctx, moves, events, playerID }) {
                     animate={{ opacity: 1, scale: 1.1, y: 0 }}
                     exit={{ opacity: 0, scale: 0.8, y: 20 }}
                   >
-                    <Card {...activeCard} id={`${activeCard.id}-peek`} isFaceDown={false} isExhausted={false} onClick={() => {}} />
+                    <Card 
+                      {...activeCard} 
+                      id={`${activeCard.instanceId ?? activeCard.id}-peek`} 
+                      isFaceDown={false} 
+                      isExhausted={false} 
+                      onClick={() => {}} 
+                    />
                   </motion.div>
 
                   {/* Tactical Action Menu */}
@@ -259,16 +265,20 @@ export function Table({ G, ctx, moves, events, playerID }) {
             )}
           </AnimatePresence>
 
-          {hand.map((card) => (
-            <Card 
-              key={card.id} 
-              {...card} 
-              isPlayable={ctx.currentPlayer === localPlayer && !isFlipping}
-              isStaged={stagedCardIds.includes(card.id)}
-              isFaceDown={isFlipping && stagedCardIds.includes(card.id)}
-              onClick={handleCardClick}
-            />
-          ))}
+          {hand.map((card) => {
+            const cardId = card.instanceId ?? card.id;
+            return (
+              <Card 
+                key={cardId} 
+                {...card} 
+                id={cardId}
+                isPlayable={ctx.currentPlayer === localPlayer && !isFlipping}
+                isStaged={stagedCardIds.includes(cardId)}
+                isFaceDown={isFlipping && stagedCardIds.includes(cardId)}
+                onClick={() => handleCardClick(cardId)}
+              />
+            );
+          })}
         </div>
         
         {/* Controls & Turn indicator */}
