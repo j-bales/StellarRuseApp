@@ -4,9 +4,13 @@ import { motion, AnimatePresence } from 'framer-motion';
 export function Card({ 
   id, name, attack, cost, abilities, flavor, art,
   isPlayable, isStaged, isFaceDown, isCompact, isPeeking, isStacked, isHighlyStacked, isExhausted, 
-  isTargetable, isInvalidTarget, onClick, onPeekStart 
+  isTargetable, isInvalidTarget, isOpponent, onClick, onPeekStart 
 }) {
   const rotation = isFaceDown ? 180 : 0;
+  
+  // Dynamic border based on ownership
+  const borderColor = isOpponent ? '#EF4444' : (isStaged ? 'var(--color-primary)' : '#4A5568');
+  const glowColor = isOpponent ? 'rgba(239, 68, 68, 0.4)' : 'rgba(59, 130, 246, 0.4)';
 
   const renderCost = () => {
     if (!cost || typeof cost !== 'object') return null;
@@ -77,9 +81,28 @@ export function Card({
         borderRadius: '12px',
         transformStyle: 'preserve-3d',
         zIndex: (isStaged || isPeeking || isTargetable) ? 50 : 1,
-        background: '#1A202C', // Solid fallback background
+        background: '#1A202C',
       }}
     >
+       <AnimatePresence>
+        {isStaged && (
+          <motion.div
+            initial={{ opacity: 0, scale: 1.05 }}
+            animate={{ opacity: 1, scale: 1.1 }}
+            exit={{ opacity: 0, scale: 1.05 }}
+            style={{
+              position: 'absolute',
+              inset: '-4px',
+              borderRadius: '16px',
+              border: `3px solid ${borderColor}`,
+              boxShadow: `0 0 15px ${glowColor}`,
+              pointerEvents: 'none',
+              zIndex: -1
+            }}
+          />
+        )}
+      </AnimatePresence>
+
       {/* Front Face */}
       <div
         style={{
@@ -87,7 +110,7 @@ export function Card({
           inset: 0,
           backfaceVisibility: 'hidden',
           background: 'linear-gradient(135deg, #2D3748 0%, #1A202C 100%)',
-          border: '1px solid #4A5568',
+          border: `1px solid ${borderColor}`,
           borderRadius: '12px',
           padding: '10px',
           display: 'flex',
@@ -125,7 +148,7 @@ export function Card({
           backfaceVisibility: 'hidden',
           transform: 'rotateY(180deg)',
           background: 'linear-gradient(135deg, #1A365D 0%, #171923 100%)',
-          border: '2px solid #2B6CB0',
+          border: `2px solid ${borderColor}`,
           borderRadius: '12px',
           display: 'flex',
           alignItems: 'center',

@@ -88,6 +88,7 @@ export function PlayStack({ stack, moves, localPlayer, peekedCard, onPeekStart, 
     >
       {stack.cards.map((card, index) => {
         const isTargetable = targetingAbility ? cardMatchesFilter(card, targetingAbility.targetFilter, currentPlayer) : false;
+        const isOpponentCard = card.owner !== localPlayer;
         
         return (
           <Card 
@@ -100,6 +101,7 @@ export function PlayStack({ stack, moves, localPlayer, peekedCard, onPeekStart, 
             isHighlyStacked={isDraggingStack && index > 0}
             isPeeking={peekedCard === (card.instanceId ?? card.id)}
             isTargetable={isTargetable}
+            isOpponent={isOpponentCard}
             isInvalidTarget={!!targetingAbility && !isTargetable}
             onPeekStart={() => !dragLockRef.current && !isOpponentStack && onPeekStart(card, stack.id)}
             onClick={isTargetable ? () => onTargetSelect(card) : null}
