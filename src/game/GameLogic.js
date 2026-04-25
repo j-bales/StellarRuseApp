@@ -150,6 +150,51 @@ export const CardGame = {
   },
 
   turn: {
-    minMoves: 1,
+    onBegin: ({ G, ctx, events }) => {
+      const currentPlayerID = ctx.currentPlayer;
+      
+      // Simulation for AI opponents (Player 1 and Player 2)
+      // Only run if it's not the human player (Player 0)
+      if (currentPlayerID !== '0') {
+        const hand = G.hands[currentPlayerID];
+        if (!hand || hand.length === 0) {
+          events.endTurn();
+          return;
+        }
+
+        // AI Logic: Play 1 or 2 stacks
+        const numStacksToPlay = Math.floor(Math.random() * 2) + 1;
+        
+        for (let s = 0; s < numStacksToPlay; s++) {
+          const currentHand = G.hands[currentPlayerID];
+          if (currentHand.length === 0) break;
+          
+          // AI plays 1 to 2 random cards in a stack
+          const cardsInStackCount = Math.min(currentHand.length, Math.floor(Math.random() * 2) + 1);
+          const stackCards = [];
+          
+          for (let c = 0; c < cardsInStackCount; c++) {
+            const [card] = G.hands[currentPlayerID].splice(0, 1);
+            stackCards.push({ 
+              ...card, 
+              owner: currentPlayerID, 
+              isFaceDown: true, 
+              isExhausted: false 
+            });
+          }
+
+          if (stackCards.length > 0) {
+            G.playAreaStacks.push({
+              id: `ai-stack-${currentPlayerID}-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
+              cards: stackCards
+            });
+          }
+        }
+        
+        // Finalize the AI turn
+        events.endTurn();
+      }
+    },
+    minMoves: 0,
   }
 };
