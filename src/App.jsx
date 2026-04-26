@@ -12,6 +12,7 @@ function App() {
   const [joined, setJoined] = useState(false);
   const [matchID, setMatchID] = useState('test-room');
   const [playerID, setPlayerID] = useState('0');
+  const [credentials, setCredentials] = useState(null);
 
   useEffect(() => {
     async function init() {
@@ -53,17 +54,35 @@ function App() {
         numPlayers: 3,
         setupData: catalog
       });
+      
+      const { playerCredentials } = await lobbyClient.joinMatch('stellar-ruse', newMatchID, {
+        playerID: String(playerID),
+        playerName: `Player-${parseInt(playerID) + 1}`
+      });
+      
+      setCredentials(playerCredentials);
       setMatchID(newMatchID);
       setJoined(true);
     } catch (e) {
-      console.error('Failed to create match', e);
+      console.error('Failed to create/join match', e);
       setError('Failed to create match on server');
     }
   };
 
-  const handleJoinMatch = () => {
+  const handleJoinMatch = async () => {
     if (matchID.trim() !== '') {
-      setJoined(true);
+      try {
+        const lobbyClient = new LobbyClient({ server: 'http://localhost:8000' });
+        const { playerCredentials } = await lobbyClient.joinMatch('stellar-ruse', matchID, {
+          playerID: String(playerID),
+          playerName: `Player-${parseInt(playerID) + 1}`
+        });
+        setCredentials(playerCredentials);
+        setJoined(true);
+      } catch (e) {
+        console.error('Failed to join match', e);
+        setError('Failed to join match - Is the Match ID correct?');
+      }
     }
   };
 
@@ -122,6 +141,7 @@ function App() {
         key={`${matchID}-${playerID}`} 
         matchID={matchID}
         playerID={playerID} 
+        credentials={credentials}
         setupData={catalog} 
       />
     </div>
