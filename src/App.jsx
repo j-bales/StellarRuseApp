@@ -49,18 +49,20 @@ function App() {
 
   const handleCreateMatch = async () => {
     try {
-      const lobbyClient = new LobbyClient({ server: 'http://localhost:8000' });
+      const lobbyClient = new LobbyClient({ server: 'http://127.0.0.1:8000' });
       const { matchID: newMatchID } = await lobbyClient.createMatch('stellar-ruse', {
         numPlayers: 3,
         setupData: catalog
       });
       
-      const { playerCredentials } = await lobbyClient.joinMatch('stellar-ruse', newMatchID, {
+      const joinRes = await lobbyClient.joinMatch('stellar-ruse', newMatchID, {
         playerID: String(playerID),
         playerName: `Player-${parseInt(playerID) + 1}`
       });
       
-      setCredentials(playerCredentials);
+      console.log('Join Response:', joinRes);
+      
+      setCredentials(joinRes.playerCredentials);
       setMatchID(newMatchID);
       setJoined(true);
     } catch (e) {
@@ -72,7 +74,7 @@ function App() {
   const handleJoinMatch = async () => {
     if (matchID.trim() !== '') {
       try {
-        const lobbyClient = new LobbyClient({ server: 'http://localhost:8000' });
+        const lobbyClient = new LobbyClient({ server: 'http://127.0.0.1:8000' });
         const { playerCredentials } = await lobbyClient.joinMatch('stellar-ruse', matchID, {
           playerID: String(playerID),
           playerName: `Player-${parseInt(playerID) + 1}`

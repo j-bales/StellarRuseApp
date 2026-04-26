@@ -3,7 +3,7 @@ import { executeAbility } from './AbilityRegistry.js';
 export const CardGame = {
   name: 'stellar-ruse',
   
-  playerView: (G, ctx, playerID) => {
+  playerView: ({ G, ctx, playerID }) => {
     let newG = { ...G };
     
     // Create a new hands object where opponents' cards are hidden stubs

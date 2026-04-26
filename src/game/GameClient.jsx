@@ -8,5 +8,5 @@ export const GameClient = Client({
   board: Table,
   numPlayers: 3,
   debug: false,
-  multiplayer: SocketIO({ server: 'localhost:8000' })
+  multiplayer: SocketIO({ server: 'http://127.0.0.1:8000' })
 });

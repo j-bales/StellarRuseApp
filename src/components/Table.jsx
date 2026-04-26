@@ -16,9 +16,12 @@ export function Table({ G, ctx, moves, events, playerID }) {
   // If playerID is null, we are observing. Assuming local single player for mockup:
   const localPlayer = playerID || '0';
   
+  console.log('Table Render G:', JSON.stringify(G));
+  console.log('Table Render ctx:', JSON.stringify(ctx));
+
   if (!G || !G.hands || !G.playerTypes) {
     return (
-      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', color: 'white' }}>
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', flexDirection: 'column', color: 'white' }}>
         <h2>Connecting to match...</h2>
       </div>
     );
