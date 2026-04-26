@@ -37,21 +37,44 @@ export const CardGame = {
     }
 
     const hands = {};
+    const playerTypes = {};
     for (let p = 0; p < ctx.numPlayers; p++) {
-      hands[p.toString()] = deck.splice(0, 5).map(card => ({
+      const pid = p.toString();
+      hands[pid] = deck.splice(0, 5).map(card => ({
         ...card,
-        owner: p.toString()
+        owner: pid
       }));
+      // Default: Player 0 is human, others are AI
+      playerTypes[pid] = (pid === '0') ? 'human' : 'ai';
     }
 
     return {
       deck: deck,
       hands: hands,
       playAreaStacks: [], 
+      playerTypes: playerTypes,
     };
   },
 
   moves: {
+    joinGame: ({ G, ctx }, playerID) => {
+      if (G.playerTypes[playerID] === 'ai') {
+        G.playerTypes[playerID] = 'human';
+        
+        // Return current hand to deck
+        const currentHand = G.hands[playerID] || [];
+        G.deck.push(...currentHand.map(card => ({ ...card, owner: null })));
+        
+        // Shuffle deck
+        G.deck = G.deck.sort(() => Math.random() - 0.5);
+        
+        // Deal 5 fresh cards
+        G.hands[playerID] = G.deck.splice(0, 5).map(card => ({
+          ...card,
+          owner: playerID
+        }));
+      }
+    },
     playMultipleCards: ({ G, ctx }, cardIds) => {
       const player = ctx.currentPlayer;
       const stackCards = [];
@@ -153,9 +176,8 @@ export const CardGame = {
     onBegin: ({ G, ctx, events }) => {
       const currentPlayerID = ctx.currentPlayer;
       
-      // Simulation for AI opponents (Player 1 and Player 2)
-      // Only run if it's not the human player (Player 0)
-      if (currentPlayerID !== '0') {
+      // Simulation for AI opponents
+      if (G.playerTypes[currentPlayerID] === 'ai') {
         const hand = G.hands[currentPlayerID];
         if (!hand || hand.length === 0) {
           events.endTurn();
