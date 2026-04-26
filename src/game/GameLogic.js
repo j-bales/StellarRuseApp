@@ -3,6 +3,35 @@ import { executeAbility } from './AbilityRegistry';
 export const CardGame = {
   name: 'stellar-ruse',
   
+  playerView: (G, ctx, playerID) => {
+    let newG = { ...G };
+    
+    // Create a new hands object where opponents' cards are hidden stubs
+    const newHands = {};
+    for (const [pID, hand] of Object.entries(G.hands)) {
+      if (pID === playerID) {
+        newHands[pID] = hand;
+      } else {
+        newHands[pID] = hand.map(card => ({
+          id: 'hidden-card',
+          instanceId: card.instanceId,
+          owner: card.owner
+        }));
+      }
+    }
+    newG.hands = newHands;
+    
+    // Hide deck contents
+    if (G.deck) {
+      newG.deck = G.deck.map(card => ({
+        id: 'hidden-card',
+        instanceId: card.instanceId
+      }));
+    }
+    
+    return newG;
+  },
+  
   setup: function({ ctx, setupData }) {
     // catalog is injected via setupData or via global fallback
     const catalog = setupData || window.CARD_CATALOG || [];
