@@ -1,16 +1,18 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { PLAYER_COLORS } from '../theme';
 
 export function Card({ 
   id, name, attack, cost, abilities, flavor, art,
   isPlayable, isStaged, isFaceDown, isCompact, isPeeking, isStacked, isHighlyStacked, isExhausted, 
-  isTargetable, isInvalidTarget, isOpponent, onClick, onPeekStart 
+  isTargetable, isInvalidTarget, owner, onClick, onPeekStart 
 }) {
   const rotation = isFaceDown ? 180 : 0;
   
   // Dynamic border based on ownership
-  const borderColor = isOpponent ? '#EF4444' : (isStaged ? 'var(--color-primary)' : '#4A5568');
-  const glowColor = isOpponent ? 'rgba(239, 68, 68, 0.4)' : 'rgba(59, 130, 246, 0.4)';
+  const theme = PLAYER_COLORS[owner] || PLAYER_COLORS.default;
+  const borderColor = isStaged ? 'var(--color-primary)' : theme.border;
+  const glowColor = isStaged ? 'var(--color-primary-glow)' : theme.glow;
 
   const renderCost = () => {
     if (!cost || typeof cost !== 'object') return null;

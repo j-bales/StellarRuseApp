@@ -3,6 +3,7 @@ import { Card } from './Card';
 import { PlayStack } from './PlayStack';
 import { motion, AnimatePresence, LayoutGroup } from 'framer-motion';
 import { cardMatchesFilter } from '../game/AbilityRegistry';
+import { PLAYER_COLORS } from '../theme';
 
 export function Table({ G, ctx, moves, events, playerID }) {
   const [stagedCardIds, setStagedCardIds] = useState([]);
@@ -121,7 +122,9 @@ export function Table({ G, ctx, moves, events, playerID }) {
             display: 'flex', 
             flexDirection: 'column',
             alignItems: 'center',
-            overflow: 'hidden'
+            overflow: 'hidden',
+            border: `1px solid ${PLAYER_COLORS['1'].border}`,
+            boxShadow: `inset 0 0 30px ${PLAYER_COLORS['1'].glow}`
           }}>
              <h4 style={{ margin: '0 0 10px 0', color: 'var(--color-text-muted)' }}>Opponent 1</h4>
              <div style={{ display: 'flex', gap: '-20px', transform: 'scale(0.7)', transformOrigin: 'top center' }}>
@@ -136,7 +139,9 @@ export function Table({ G, ctx, moves, events, playerID }) {
             display: 'flex', 
             flexDirection: 'column',
             alignItems: 'center',
-            overflow: 'hidden'
+            overflow: 'hidden',
+            border: `1px solid ${PLAYER_COLORS['2'].border}`,
+            boxShadow: `inset 0 0 30px ${PLAYER_COLORS['2'].glow}`
           }}>
              <h4 style={{ margin: '0 0 10px 0', color: 'var(--color-text-muted)' }}>Opponent 2</h4>
              <div style={{ display: 'flex', gap: '-20px', transform: 'scale(0.7)', transformOrigin: 'top center' }}>
@@ -193,7 +198,9 @@ export function Table({ G, ctx, moves, events, playerID }) {
           paddingBottom: '20px',
           position: 'relative',
           transition: 'background 0.3s',
-          borderRadius: '20px'
+          borderRadius: '20px',
+          borderBottom: `4px solid ${PLAYER_COLORS[localPlayer]?.border || PLAYER_COLORS.default.border}`,
+          background: `linear-gradient(to top, ${PLAYER_COLORS[localPlayer]?.glow || 'rgba(0,0,0,0)'}, transparent)`
         }}>
           {/* Peeking Overlay - Shows the card faceup above the hand with actions */}
           <AnimatePresence>
