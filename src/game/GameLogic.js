@@ -1,4 +1,4 @@
-import { executeAbility } from './AbilityRegistry';
+import { executeAbility } from './AbilityRegistry.js';
 
 export const CardGame = {
   name: 'stellar-ruse',
@@ -34,7 +34,7 @@ export const CardGame = {
   
   setup: function({ ctx, setupData }) {
     // catalog is injected via setupData or via global fallback
-    const catalog = setupData || window.CARD_CATALOG || [];
+    const catalog = setupData || (typeof window !== 'undefined' ? window.CARD_CATALOG : []);
     
     // Create a deck by duplicating cards from the catalog to reach a reasonable size
     // Each card gets a unique instanceId to distinguish multiple copies
