@@ -126,7 +126,19 @@ export function Table({ G, ctx, moves, events, playerID }) {
             border: `1px solid ${PLAYER_COLORS['1'].border}`,
             boxShadow: `inset 0 0 30px ${PLAYER_COLORS['1'].glow}`
           }}>
-             <h4 style={{ margin: '0 0 10px 0', color: 'var(--color-text-muted)' }}>Opponent 1</h4>
+             <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', alignItems: 'center', marginBottom: '10px' }}>
+               <h4 style={{ margin: 0, color: 'var(--color-text-muted)' }}>
+                 {G.playerTypes['1'] === 'human' ? 'Player-2' : 'AI Opponent'}
+               </h4>
+               {G.playerTypes['1'] === 'ai' && (
+                 <button 
+                   onClick={() => moves.joinGame('1')}
+                   style={{ padding: '4px 12px', background: 'var(--color-primary)', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 'bold' }}
+                 >
+                   Join Game
+                 </button>
+               )}
+             </div>
              <div style={{ display: 'flex', gap: '-20px', transform: 'scale(0.7)', transformOrigin: 'top center' }}>
                 {(G.hands['1'] || []).map(card => (
                   <Card key={card.instanceId ?? card.id} {...card} id={card.instanceId ?? card.id} isFaceDown={true} isPlayable={false} />
@@ -143,7 +155,19 @@ export function Table({ G, ctx, moves, events, playerID }) {
             border: `1px solid ${PLAYER_COLORS['2'].border}`,
             boxShadow: `inset 0 0 30px ${PLAYER_COLORS['2'].glow}`
           }}>
-             <h4 style={{ margin: '0 0 10px 0', color: 'var(--color-text-muted)' }}>Opponent 2</h4>
+             <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', alignItems: 'center', marginBottom: '10px' }}>
+               <h4 style={{ margin: 0, color: 'var(--color-text-muted)' }}>
+                 {G.playerTypes['2'] === 'human' ? 'Player-3' : 'AI Opponent'}
+               </h4>
+               {G.playerTypes['2'] === 'ai' && (
+                 <button 
+                   onClick={() => moves.joinGame('2')}
+                   style={{ padding: '4px 12px', background: 'var(--color-primary)', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 'bold' }}
+                 >
+                   Join Game
+                 </button>
+               )}
+             </div>
              <div style={{ display: 'flex', gap: '-20px', transform: 'scale(0.7)', transformOrigin: 'top center' }}>
                 {(G.hands['2'] || []).map(card => (
                   <Card key={card.instanceId ?? card.id} {...card} id={card.instanceId ?? card.id} isFaceDown={true} isPlayable={false} />
@@ -348,7 +372,9 @@ export function Table({ G, ctx, moves, events, playerID }) {
         }}>
           <div className="glass-panel" style={{ overflow: 'hidden', minWidth: '150px' }}>
             <div style={{ padding: '1rem', fontWeight: 'bold' }}>
-              {ctx.currentPlayer === localPlayer ? '🟢 Your Turn' : '🔴 Opponent Turn'}
+              {ctx.currentPlayer === localPlayer 
+                ? '🟢 Your Turn' 
+                : `🔴 Player-${parseInt(ctx.currentPlayer) + 1}'s Turn`}
             </div>
             {ctx.currentPlayer === localPlayer && (
               <button 
