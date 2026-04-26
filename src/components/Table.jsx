@@ -16,6 +16,14 @@ export function Table({ G, ctx, moves, events, playerID }) {
   // If playerID is null, we are observing. Assuming local single player for mockup:
   const localPlayer = playerID || '0';
   
+  if (!G || !G.hands || !G.playerTypes) {
+    return (
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', color: 'white' }}>
+        <h2>Connecting to match...</h2>
+      </div>
+    );
+  }
+
   const hand = G.hands[localPlayer] || [];
   const playAreaStacks = G.playAreaStacks || [];
 

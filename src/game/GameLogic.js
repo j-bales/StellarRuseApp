@@ -7,19 +7,21 @@ export const CardGame = {
     let newG = { ...G };
     
     // Create a new hands object where opponents' cards are hidden stubs
-    const newHands = {};
-    for (const [pID, hand] of Object.entries(G.hands)) {
-      if (pID === playerID) {
-        newHands[pID] = hand;
-      } else {
-        newHands[pID] = hand.map(card => ({
-          id: 'hidden-card',
-          instanceId: card.instanceId,
-          owner: card.owner
-        }));
+    if (G.hands) {
+      const newHands = {};
+      for (const [pID, hand] of Object.entries(G.hands)) {
+        if (pID === playerID) {
+          newHands[pID] = hand;
+        } else {
+          newHands[pID] = hand.map(card => ({
+            id: 'hidden-card',
+            instanceId: card.instanceId,
+            owner: card.owner
+          }));
+        }
       }
+      newG.hands = newHands;
     }
-    newG.hands = newHands;
     
     // Hide deck contents
     if (G.deck) {

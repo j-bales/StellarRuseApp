@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { GameClient } from './game/GameClient';
+import { LobbyClient } from 'boardgame.io/client';
 import { loadCardCatalog } from './game/CardLoader';
 import './styles/theme.css';
 
@@ -45,14 +46,44 @@ function App() {
     );
   }
 
+  const handleCreateMatch = async () => {
+    try {
+      const lobbyClient = new LobbyClient({ server: 'http://localhost:8000' });
+      const { matchID: newMatchID } = await lobbyClient.createMatch('stellar-ruse', {
+        numPlayers: 3,
+        setupData: catalog
+      });
+      setMatchID(newMatchID);
+      setJoined(true);
+    } catch (e) {
+      console.error('Failed to create match', e);
+      setError('Failed to create match on server');
+    }
+  };
+
+  const handleJoinMatch = () => {
+    if (matchID.trim() !== '') {
+      setJoined(true);
+    }
+  };
+
   if (!joined) {
     return (
       <div className="app-container" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', flexDirection: 'column' }}>
         <div className="glass-panel" style={{ padding: '2rem', display: 'flex', flexDirection: 'column', gap: '1rem', width: '300px' }}>
-          <h2 style={{ textAlign: 'center', margin: '0 0 1rem 0' }}>Join Match</h2>
+          <h2 style={{ textAlign: 'center', margin: '0 0 1rem 0' }}>Multiplayer Lobby</h2>
+          
+          <button 
+            onClick={handleCreateMatch}
+            style={{ padding: '0.8rem', background: 'var(--color-secondary, #10b981)', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}
+          >
+            Create New Match
+          </button>
+
+          <div style={{ textAlign: 'center', margin: '1rem 0', color: 'gray' }}>OR</div>
           
           <div>
-            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>Match ID</label>
+            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>Match ID to Join</label>
             <input 
               type="text" 
               value={matchID} 
@@ -75,10 +106,10 @@ function App() {
           </div>
 
           <button 
-            onClick={() => setJoined(true)}
+            onClick={handleJoinMatch}
             style={{ marginTop: '1rem', padding: '0.8rem', background: 'var(--color-primary)', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}
           >
-            Connect
+            Join Match
           </button>
         </div>
       </div>
